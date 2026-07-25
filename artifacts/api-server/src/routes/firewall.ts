@@ -1,76 +1,113 @@
 import { Router, type IRouter } from "express";
-import { eq } from "drizzle-orm";
-import { db, firewallRulesTable } from "@workspace/db";
-import {
-  CreateFirewallRuleBody,
-  UpdateFirewallRuleBody,
-  UpdateFirewallRuleParams,
-  DeleteFirewallRuleParams,
-} from "@workspace/api-zod";
+import { insert, update, remove, findAll } from "../services/memory-store";
+import { blockIp, unblockIp, getBlockedIps, loadBlockedIps, getAllFirewallRules } from "../services/firewall-service";
 
 const router: IRouter = Router();
 
 router.get("/firewall/rules", async (_req, res): Promise<void> => {
-  const rules = await db.select().from(firewallRulesTable).orderBy(firewallRulesTable.priority);
-  res.json(rules.map(formatRule));
+  const rules = getAllFirewallRules();
+  res.json(rules);
 });
 
 router.post("/firewall/rules", async (req, res): Promise<void> => {
-  const parsed = CreateFirewallRuleBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  const { name, description, action, protocol, sourceIp, destinationPort, enabled, priority } = req.body;
+  
+  if (!name || !action || !protocol || !sourceIp || !destinationPort) {
+    res.status(400).json({ error: "Missing required fields" });
     return;
   }
-  const [rule] = await db.insert(firewallRulesTable).values({
-    ...parsed.data,
-    description: parsed.data.description ?? "",
-    enabled: parsed.data.enabled ?? true,
-    priority: parsed.data.priority ?? 100,
-  }).returning();
+  
+  const rule = insert("firewall_rules", {
+    name,
+    description: description ?? "",
+    action,
+    protocol,
+    sourceIp,
+    destinationPort,
+    enabled: enabled ?? true,
+    priority: priority ?? 100,
+  });
+  
+  await loadBlockedIps();
+  
   res.status(201).json(formatRule(rule));
 });
 
 router.patch("/firewall/rules/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const params = UpdateFirewallRuleParams.safeParse({ id: parseInt(raw, 10) });
-  if (!params.success) {
+  const id = parseInt(raw, 10);
+  
+  if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
-  const parsed = UpdateFirewallRuleBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
-    return;
-  }
-  const [rule] = await db.update(firewallRulesTable)
-    .set(parsed.data)
-    .where(eq(firewallRulesTable.id, params.data.id))
-    .returning();
-  if (!rule) {
+  
+  const updated = update("firewall_rules", { id }, req.body);
+  
+  await loadBlockedIps();
+  
+  if (updated.length === 0) {
     res.status(404).json({ error: "Firewall rule not found" });
     return;
   }
-  res.json(formatRule(rule));
+  
+  res.json(formatRule(updated[0]));
 });
 
 router.delete("/firewall/rules/:id", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const params = DeleteFirewallRuleParams.safeParse({ id: parseInt(raw, 10) });
-  if (!params.success) {
+  const id = parseInt(raw, 10);
+  
+  if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
-  const [rule] = await db.delete(firewallRulesTable)
-    .where(eq(firewallRulesTable.id, params.data.id))
-    .returning();
-  if (!rule) {
+  
+  const removed = remove("firewall_rules", { id });
+  
+  await loadBlockedIps();
+  
+  if (removed.length === 0) {
     res.status(404).json({ error: "Firewall rule not found" });
     return;
   }
+  
   res.sendStatus(204);
 });
 
-function formatRule(r: typeof firewallRulesTable.$inferSelect) {
+router.post("/firewall/block/:ip", async (req, res): Promise<void> => {
+  const ip = req.params.ip;
+  const reason = req.body.reason || "Security threat";
+  
+  await blockIp(ip, reason);
+  
+  res.status(201).json({
+    message: `IP ${ip} blocked successfully`,
+    ip,
+    reason,
+  });
+});
+
+router.post("/firewall/unblock/:ip", async (req, res): Promise<void> => {
+  const ip = req.params.ip;
+  
+  await unblockIp(ip);
+  
+  res.json({
+    message: `IP ${ip} unblocked successfully`,
+    ip,
+  });
+});
+
+router.get("/firewall/blocked", async (_req, res): Promise<void> => {
+  const blockedIpsList = await getBlockedIps();
+  res.json({
+    blockedIps: blockedIpsList,
+    count: blockedIpsList.length,
+  });
+});
+
+function formatRule(r: any) {
   return {
     id: r.id,
     name: r.name,
@@ -81,7 +118,7 @@ function formatRule(r: typeof firewallRulesTable.$inferSelect) {
     destinationPort: r.destinationPort,
     enabled: r.enabled,
     priority: r.priority,
-    createdAt: r.createdAt.toISOString(),
+    createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
   };
 }
 

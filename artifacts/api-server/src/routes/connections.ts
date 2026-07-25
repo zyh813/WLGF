@@ -1,41 +1,54 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
-import { db, connectionsTable } from "@workspace/db";
-import { BlockConnectionParams } from "@workspace/api-zod";
+import { update, findAll } from "../services/memory-store";
+import { getActiveConnections, syncNetworkConnections, getAllConnections } from "../services/network-monitor";
 import { getKnownThreatIps } from "../lib/threat-match";
 
 const router: IRouter = Router();
 
 router.get("/connections", async (req, res): Promise<void> => {
+  await syncNetworkConnections();
+  
   const { status } = req.query as { status?: string };
-  const q = db.select().from(connectionsTable).orderBy(desc(connectionsTable.connectedAt));
-  if (status && status !== "all") {
-    q.where(eq(connectionsTable.status, status as "active" | "blocked" | "suspicious"));
-  }
-  const connections = await q;
+  const connections = getAllConnections(status);
   const threatIps = await getKnownThreatIps();
   res.json(connections.map((c) => formatConnection(c, threatIps)));
 });
 
+router.get("/connections/live", async (_req, res): Promise<void> => {
+  const liveConnections = getActiveConnections();
+  const threatIps = await getKnownThreatIps();
+  
+  res.json(liveConnections.map((c) => ({
+    sourceIp: c.sourceIp,
+    sourcePort: c.sourcePort,
+    destinationIp: c.destinationIp,
+    destinationPort: c.destinationPort,
+    protocol: c.protocol,
+    status: c.status,
+    knownThreat: threatIps.has(c.sourceIp),
+  })));
+});
+
 router.post("/connections/:id/block", async (req, res): Promise<void> => {
   const raw = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
-  const params = BlockConnectionParams.safeParse({ id: parseInt(raw, 10) });
-  if (!params.success) {
+  const id = parseInt(raw, 10);
+  
+  if (isNaN(id)) {
     res.status(400).json({ error: "Invalid id" });
     return;
   }
-  const [conn] = await db.update(connectionsTable)
-    .set({ status: "blocked" })
-    .where(eq(connectionsTable.id, params.data.id))
-    .returning();
-  if (!conn) {
+  
+  const updated = update("network_connections", { id }, { status: "blocked" });
+  
+  if (updated.length === 0) {
     res.status(404).json({ error: "Connection not found" });
     return;
   }
-  res.json(formatConnection(conn));
+  
+  res.json(formatConnection(updated[0]));
 });
 
-function formatConnection(c: typeof connectionsTable.$inferSelect, threatIps?: Set<string>) {
+function formatConnection(c: any, threatIps?: Set<string>) {
   return {
     id: c.id,
     sourceIp: c.sourceIp,
@@ -47,7 +60,7 @@ function formatConnection(c: typeof connectionsTable.$inferSelect, threatIps?: S
     bytesIn: c.bytesIn,
     bytesOut: c.bytesOut,
     country: c.country,
-    connectedAt: c.connectedAt.toISOString(),
+    connectedAt: c.connectedAt ? c.connectedAt.toISOString() : new Date().toISOString(),
     knownThreat: threatIps ? threatIps.has(c.sourceIp) : false,
   };
 }

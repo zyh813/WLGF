@@ -1,20 +1,12 @@
 import { Router, type IRouter } from "express";
-import { eq, desc } from "drizzle-orm";
-import { db, assetsTable, reconJobsTable, type AssetService } from "@workspace/db";
-import { StartReconJobBody } from "@workspace/api-zod";
+import { insert, findAll, update } from "../services/memory-store";
+import { runReconScan } from "../services/vulnerability-scanner";
 
 const router: IRouter = Router();
 
 type RiskLevel = "critical" | "high" | "medium" | "low";
 
-const seedAssets: Array<{
-  host: string;
-  ipAddress: string;
-  os: string;
-  services: AssetService[];
-  riskLevel: RiskLevel;
-  openVulnerabilities: number;
-}> = [
+const seedAssets = [
   {
     host: "web-gateway-01",
     ipAddress: "10.0.1.10",
@@ -24,7 +16,7 @@ const seedAssets: Array<{
       { port: 80, protocol: "tcp", service: "nginx", version: "1.18.0" },
       { port: 443, protocol: "tcp", service: "nginx", version: "1.18.0" },
     ],
-    riskLevel: "medium",
+    riskLevel: "medium" as RiskLevel,
     openVulnerabilities: 2,
   },
   {
@@ -35,103 +27,26 @@ const seedAssets: Array<{
       { port: 22, protocol: "tcp", service: "OpenSSH", version: "8.4p1" },
       { port: 5432, protocol: "tcp", service: "PostgreSQL", version: "14.5" },
     ],
-    riskLevel: "high",
+    riskLevel: "high" as RiskLevel,
     openVulnerabilities: 4,
-  },
-  {
-    host: "legacy-fileserver",
-    ipAddress: "10.0.3.30",
-    os: "Windows Server 2012 R2",
-    services: [
-      { port: 139, protocol: "tcp", service: "NetBIOS-SSN", version: "-" },
-      { port: 445, protocol: "tcp", service: "SMB", version: "SMBv1" },
-      { port: 3389, protocol: "tcp", service: "RDP", version: "-" },
-    ],
-    riskLevel: "critical",
-    openVulnerabilities: 7,
-  },
-  {
-    host: "internal-dns",
-    ipAddress: "10.0.1.53",
-    os: "Alpine Linux 3.18",
-    services: [
-      { port: 53, protocol: "udp", service: "dnsmasq", version: "2.89" },
-    ],
-    riskLevel: "low",
-    openVulnerabilities: 0,
   },
 ];
 
-async function ensureAssetsSeeded(): Promise<void> {
-  const existing = await db.select({ id: assetsTable.id }).from(assetsTable).limit(1);
+function ensureAssetsSeeded(): void {
+  const existing = findAll("assets");
   if (existing.length === 0) {
-    await db.insert(assetsTable).values(seedAssets);
+    seedAssets.forEach((asset) => insert("assets", asset));
   }
 }
 
-// Candidate hosts a simulated sweep may "discover".
-const discoveryPool: Array<{
-  host: string;
-  ipAddress: string;
-  os: string;
-  services: AssetService[];
-  riskLevel: RiskLevel;
-  openVulnerabilities: number;
-}> = [
-  {
-    host: "app-node-04",
-    ipAddress: "10.0.4.14",
-    os: "Ubuntu 20.04 LTS",
-    services: [
-      { port: 22, protocol: "tcp", service: "OpenSSH", version: "8.2p1" },
-      { port: 8080, protocol: "tcp", service: "Apache Tomcat", version: "9.0.65" },
-    ],
-    riskLevel: "medium",
-    openVulnerabilities: 1,
-  },
-  {
-    host: "mail-relay",
-    ipAddress: "10.0.5.25",
-    os: "CentOS 7",
-    services: [
-      { port: 25, protocol: "tcp", service: "Postfix", version: "3.5.8" },
-      { port: 143, protocol: "tcp", service: "Dovecot IMAP", version: "2.3.16" },
-      { port: 993, protocol: "tcp", service: "Dovecot IMAPS", version: "2.3.16" },
-    ],
-    riskLevel: "high",
-    openVulnerabilities: 3,
-  },
-  {
-    host: "iot-camera-12",
-    ipAddress: "10.0.6.112",
-    os: "Embedded Linux",
-    services: [
-      { port: 80, protocol: "tcp", service: "GoAhead httpd", version: "2.5" },
-      { port: 554, protocol: "tcp", service: "RTSP", version: "-" },
-    ],
-    riskLevel: "critical",
-    openVulnerabilities: 5,
-  },
-  {
-    host: "backup-store",
-    ipAddress: "10.0.2.40",
-    os: "TrueNAS CORE 13",
-    services: [
-      { port: 22, protocol: "tcp", service: "OpenSSH", version: "8.8p1" },
-      { port: 445, protocol: "tcp", service: "SMB", version: "SMBv3" },
-    ],
-    riskLevel: "low",
-    openVulnerabilities: 0,
-  },
-];
-
 router.get("/assets", async (req, res): Promise<void> => {
-  await ensureAssetsSeeded();
+  ensureAssetsSeeded();
   const risk = typeof req.query.risk === "string" ? req.query.risk : "all";
-  const assets = await db.select().from(assetsTable).orderBy(desc(assetsTable.lastSeen));
-  const filtered =
-    risk && risk !== "all" ? assets.filter((a) => a.riskLevel === risk) : assets;
-  res.json(filtered.map(formatAsset));
+  let assets = findAll("assets");
+  if (risk && risk !== "all") {
+    assets = assets.filter((a) => a.riskLevel === risk);
+  }
+  res.json(assets.map(formatAsset));
 });
 
 router.get("/assets/:id", async (req, res): Promise<void> => {
@@ -140,7 +55,8 @@ router.get("/assets/:id", async (req, res): Promise<void> => {
     res.status(400).json({ error: "Invalid asset id" });
     return;
   }
-  const [asset] = await db.select().from(assetsTable).where(eq(assetsTable.id, id));
+  const assets = findAll("assets");
+  const asset = assets.find((a) => a.id === id);
   if (!asset) {
     res.status(404).json({ error: "Asset not found" });
     return;
@@ -149,62 +65,73 @@ router.get("/assets/:id", async (req, res): Promise<void> => {
 });
 
 router.get("/recon-jobs", async (_req, res): Promise<void> => {
-  const jobs = await db.select().from(reconJobsTable).orderBy(desc(reconJobsTable.startedAt));
-  res.json(jobs.map(formatReconJob));
+  const jobs = findAll("recon_jobs").map(formatReconJob);
+  res.json(jobs);
 });
 
 router.post("/recon-jobs", async (req, res): Promise<void> => {
-  const parsed = StartReconJobBody.safeParse(req.body);
-  if (!parsed.success) {
-    res.status(400).json({ error: parsed.error.message });
+  const { target } = req.body;
+  
+  if (!target) {
+    res.status(400).json({ error: "Missing target" });
     return;
   }
 
-  const [job] = await db
-    .insert(reconJobsTable)
-    .values({ target: parsed.data.target, status: "running" })
-    .returning();
+  const job = insert("recon_jobs", {
+    target,
+    status: "running",
+    discoveredCount: 0,
+  });
 
-  // Simulate the reconnaissance sweep completing after a brief delay.
-  setTimeout(async () => {
-    try {
-      const numDiscovered = 1 + Math.floor(Math.random() * discoveryPool.length);
-      const shuffled = [...discoveryPool].sort(() => Math.random() - 0.5).slice(0, numDiscovered);
+  runReconScan(target).then(async (result) => {
+    let discovered = 0;
+    
+    const services = result.openPorts.map((port, index) => ({
+      port,
+      protocol: "tcp",
+      service: result.services[index] || "unknown",
+      version: "-",
+    }));
 
-      let discovered = 0;
-      for (const candidate of shuffled) {
-        const [existing] = await db
-          .select({ id: assetsTable.id })
-          .from(assetsTable)
-          .where(eq(assetsTable.ipAddress, candidate.ipAddress));
-        if (existing) {
-          // Refresh last-seen for already-known assets.
-          await db
-            .update(assetsTable)
-            .set({ lastSeen: new Date(), services: candidate.services })
-            .where(eq(assetsTable.id, existing.id));
-        } else {
-          await db.insert(assetsTable).values(candidate);
-          discovered += 1;
-        }
-      }
+    const riskLevel: RiskLevel = result.vulnerabilities.length > 2 ? "critical" 
+      : result.vulnerabilities.length > 0 ? "high"
+      : result.openPorts.length > 5 ? "medium" : "low";
 
-      await db
-        .update(reconJobsTable)
-        .set({ status: "completed", completedAt: new Date(), discoveredCount: discovered })
-        .where(eq(reconJobsTable.id, job.id));
-    } catch {
-      await db
-        .update(reconJobsTable)
-        .set({ status: "failed", completedAt: new Date() })
-        .where(eq(reconJobsTable.id, job.id));
+    const assets = findAll("assets");
+    const existing = assets.find((a) => a.ipAddress === target);
+
+    if (existing) {
+      update("assets", { id: existing.id }, { 
+        lastSeen: new Date(), 
+        services,
+        openVulnerabilities: result.vulnerabilities.length,
+        riskLevel,
+      });
+    } else {
+      insert("assets", {
+        host: `host-${target.replace(/\./g, "-")}`,
+        ipAddress: target,
+        os: "Unknown",
+        services,
+        riskLevel,
+        openVulnerabilities: result.vulnerabilities.length,
+      });
+      discovered += 1;
     }
-  }, 4000);
+
+    update("recon_jobs", { id: job.id }, { 
+      status: "completed", 
+      completedAt: new Date(), 
+      discoveredCount: discovered,
+    });
+  }).catch(() => {
+    update("recon_jobs", { id: job.id }, { status: "failed", completedAt: new Date() });
+  });
 
   res.status(201).json(formatReconJob(job));
 });
 
-function formatAsset(a: typeof assetsTable.$inferSelect) {
+function formatAsset(a: any) {
   return {
     id: a.id,
     host: a.host,
@@ -213,17 +140,17 @@ function formatAsset(a: typeof assetsTable.$inferSelect) {
     services: a.services ?? [],
     riskLevel: a.riskLevel,
     openVulnerabilities: a.openVulnerabilities,
-    lastSeen: a.lastSeen.toISOString(),
+    lastSeen: a.lastSeen ? a.lastSeen.toISOString() : new Date().toISOString(),
   };
 }
 
-function formatReconJob(j: typeof reconJobsTable.$inferSelect) {
+function formatReconJob(j: any) {
   return {
     id: j.id,
     target: j.target,
     status: j.status,
     discoveredCount: j.discoveredCount,
-    startedAt: j.startedAt.toISOString(),
+    startedAt: j.startedAt ? j.startedAt.toISOString() : new Date().toISOString(),
     completedAt: j.completedAt ? j.completedAt.toISOString() : null,
   };
 }

@@ -1,0 +1,13 @@
+# CyberShield
+
+> Real-time network threat detection, firewall management, and security operations platform for SOC teams.
+
+## Features
+- Network traffic monitoring and connection tracking
+- Firewall rule management
+- Threat alerts and security scoring
+- Security scan scheduling and reporting
+- Audit logs
+
+## Links
+- Home: https://WLGF.replit.app/

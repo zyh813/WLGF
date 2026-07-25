@@ -4,6 +4,7 @@ import alertsRouter from "./alerts";
 import firewallRouter from "./firewall";
 import connectionsRouter from "./connections";
 import scansRouter from "./scans";
+import attacksRouter from "./attacks";
 import logsRouter from "./security-logs";
 import dashboardRouter from "./dashboard";
 
@@ -15,6 +16,7 @@ router.use(alertsRouter);
 router.use(firewallRouter);
 router.use(connectionsRouter);
 router.use(scansRouter);
+router.use(attacksRouter);
 router.use(logsRouter);
 
 export default router;

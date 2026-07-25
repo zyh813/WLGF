@@ -279,6 +279,66 @@ export interface ScanInput {
   type: ScanInputType;
 }
 
+export type AttackCampaignType = typeof AttackCampaignType[keyof typeof AttackCampaignType];
+
+
+export const AttackCampaignType = {
+  sql_injection: 'sql_injection',
+  xss: 'xss',
+  ddos: 'ddos',
+  brute_force: 'brute_force',
+  port_scan: 'port_scan',
+  phishing: 'phishing',
+} as const;
+
+export type AttackCampaignStatus = typeof AttackCampaignStatus[keyof typeof AttackCampaignStatus];
+
+
+export const AttackCampaignStatus = {
+  running: 'running',
+  completed: 'completed',
+  blocked: 'blocked',
+} as const;
+
+export interface AttackCampaign {
+  id: number;
+  target: string;
+  type: AttackCampaignType;
+  status: AttackCampaignStatus;
+  /** @nullable */
+  result: string | null;
+  startedAt: string;
+  /** @nullable */
+  completedAt: string | null;
+}
+
+export type AttackInputType = typeof AttackInputType[keyof typeof AttackInputType];
+
+
+export const AttackInputType = {
+  sql_injection: 'sql_injection',
+  xss: 'xss',
+  ddos: 'ddos',
+  brute_force: 'brute_force',
+  port_scan: 'port_scan',
+  phishing: 'phishing',
+} as const;
+
+export interface AttackInput {
+  target: string;
+  type: AttackInputType;
+}
+
+export interface Exploit {
+  id: number;
+  name: string;
+  category: string;
+  severity: string;
+  mitreTactic: string;
+  description: string;
+  payload: string;
+}
+
 export type SecurityLogLevel = typeof SecurityLogLevel[keyof typeof SecurityLogLevel];
 
 

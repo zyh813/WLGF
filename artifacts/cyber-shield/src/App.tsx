@@ -11,6 +11,7 @@ import Alerts from '@/pages/Alerts';
 import Firewall from '@/pages/Firewall';
 import Connections from '@/pages/Connections';
 import Scans from '@/pages/Scans';
+import Attacks from '@/pages/Attacks';
 import Logs from '@/pages/Logs';
 
 const queryClient = new QueryClient({
@@ -31,6 +32,7 @@ function Router() {
         <Route path="/firewall" component={Firewall} />
         <Route path="/connections" component={Connections} />
         <Route path="/scans" component={Scans} />
+        <Route path="/attacks" component={Attacks} />
         <Route path="/logs" component={Logs} />
         <Route component={NotFound} />
       </Switch>

@@ -22,7 +22,10 @@ import type {
 import type {
   Alert,
   AlertInput,
+  AttackCampaign,
+  AttackInput,
   DashboardSummary,
+  Exploit,
   FirewallRule,
   FirewallRuleInput,
   FirewallRuleUpdate,
@@ -1116,6 +1119,231 @@ export const useStartScan = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getStartScanMutationOptions(options));
     }
+
+export const getGetAttacksUrl = () => {
+
+
+
+
+  return `/api/attacks`
+}
+
+/**
+ * @summary List attack campaigns
+ */
+export const getAttacks = async ( options?: RequestInit): Promise<AttackCampaign[]> => {
+
+  return customFetch<AttackCampaign[]>(getGetAttacksUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAttacksQueryKey = () => {
+    return [
+    `/api/attacks`
+    ] as const;
+    }
+
+
+export const getGetAttacksQueryOptions = <TData = Awaited<ReturnType<typeof getAttacks>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAttacks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAttacksQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAttacks>>> = ({ signal }) => getAttacks({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAttacks>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAttacksQueryResult = NonNullable<Awaited<ReturnType<typeof getAttacks>>>
+export type GetAttacksQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List attack campaigns
+ */
+
+export function useGetAttacks<TData = Awaited<ReturnType<typeof getAttacks>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAttacks>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAttacksQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getLaunchAttackUrl = () => {
+
+
+
+
+  return `/api/attacks`
+}
+
+/**
+ * @summary Launch a simulated attack campaign
+ */
+export const launchAttack = async (attackInput: AttackInput, options?: RequestInit): Promise<AttackCampaign> => {
+
+  return customFetch<AttackCampaign>(getLaunchAttackUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(attackInput)
+  }
+);}
+
+
+
+
+
+export const getLaunchAttackMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof launchAttack>>, TError,{data: BodyType<AttackInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof launchAttack>>, TError,{data: BodyType<AttackInput>}, TContext> => {
+
+const mutationKey = ['launchAttack'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof launchAttack>>, {data: BodyType<AttackInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  launchAttack(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LaunchAttackMutationResult = NonNullable<Awaited<ReturnType<typeof launchAttack>>>
+    export type LaunchAttackMutationBody = BodyType<AttackInput>
+    export type LaunchAttackMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Launch a simulated attack campaign
+ */
+export const useLaunchAttack = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof launchAttack>>, TError,{data: BodyType<AttackInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof launchAttack>>,
+        TError,
+        {data: BodyType<AttackInput>},
+        TContext
+      > => {
+      return useMutation(getLaunchAttackMutationOptions(options));
+    }
+
+export const getGetExploitsUrl = () => {
+
+
+
+
+  return `/api/exploits`
+}
+
+/**
+ * @summary List exploit/payload catalog entries
+ */
+export const getExploits = async ( options?: RequestInit): Promise<Exploit[]> => {
+
+  return customFetch<Exploit[]>(getGetExploitsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetExploitsQueryKey = () => {
+    return [
+    `/api/exploits`
+    ] as const;
+    }
+
+
+export const getGetExploitsQueryOptions = <TData = Awaited<ReturnType<typeof getExploits>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getExploits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetExploitsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getExploits>>> = ({ signal }) => getExploits({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getExploits>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetExploitsQueryResult = NonNullable<Awaited<ReturnType<typeof getExploits>>>
+export type GetExploitsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List exploit/payload catalog entries
+ */
+
+export function useGetExploits<TData = Awaited<ReturnType<typeof getExploits>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getExploits>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetExploitsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetLogsUrl = (params?: GetLogsParams,) => {
   const normalizedParams = new URLSearchParams();

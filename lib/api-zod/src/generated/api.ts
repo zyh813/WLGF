@@ -298,6 +298,55 @@ export const StartScanResponse = zod.object({
 
 
 /**
+ * @summary List attack campaigns
+ */
+export const GetAttacksResponseItem = zod.object({
+  "id": zod.number(),
+  "target": zod.string(),
+  "type": zod.enum(['sql_injection', 'xss', 'ddos', 'brute_force', 'port_scan', 'phishing']),
+  "status": zod.enum(['running', 'completed', 'blocked']),
+  "result": zod.string().nullable(),
+  "startedAt": zod.string(),
+  "completedAt": zod.string().nullable()
+})
+export const GetAttacksResponse = zod.array(GetAttacksResponseItem)
+
+
+/**
+ * @summary Launch a simulated attack campaign
+ */
+export const LaunchAttackBody = zod.object({
+  "target": zod.string(),
+  "type": zod.enum(['sql_injection', 'xss', 'ddos', 'brute_force', 'port_scan', 'phishing'])
+})
+
+export const LaunchAttackResponse = zod.object({
+  "id": zod.number(),
+  "target": zod.string(),
+  "type": zod.enum(['sql_injection', 'xss', 'ddos', 'brute_force', 'port_scan', 'phishing']),
+  "status": zod.enum(['running', 'completed', 'blocked']),
+  "result": zod.string().nullable(),
+  "startedAt": zod.string(),
+  "completedAt": zod.string().nullable()
+})
+
+
+/**
+ * @summary List exploit/payload catalog entries
+ */
+export const GetExploitsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "category": zod.string(),
+  "severity": zod.string(),
+  "mitreTactic": zod.string(),
+  "description": zod.string(),
+  "payload": zod.string()
+})
+export const GetExploitsResponse = zod.array(GetExploitsResponseItem)
+
+
+/**
  * @summary List security audit logs
  */
 export const GetLogsQueryParams = zod.object({

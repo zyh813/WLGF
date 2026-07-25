@@ -24,6 +24,8 @@ tags:
     description: Security audit logs
   - name: traffic
     description: Network traffic analysis
+  - name: attacks
+    description: Attack simulation and exploit catalog
 
 paths:
   /healthz:
@@ -282,6 +284,53 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Scan"
+
+  /attacks:
+    get:
+      operationId: getAttacks
+      tags: [attacks]
+      summary: List attack campaigns
+      responses:
+        "200":
+          description: List of attack campaigns
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AttackCampaign"
+    post:
+      operationId: launchAttack
+      tags: [attacks]
+      summary: Launch a simulated attack campaign
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AttackInput"
+      responses:
+        "201":
+          description: Attack launched
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AttackCampaign"
+
+  /exploits:
+    get:
+      operationId: getExploits
+      tags: [attacks]
+      summary: List exploit/payload catalog entries
+      responses:
+        "200":
+          description: List of exploits
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Exploit"
 
   /logs:
     get:
@@ -604,6 +653,72 @@ components:
         type:
           type: string
           enum: [port, vulnerability, full]
+
+    AttackCampaign:
+      type: object
+      required:
+        - id
+        - target
+        - type
+        - status
+        - result
+        - startedAt
+        - completedAt
+      properties:
+        id:
+          type: integer
+        target:
+          type: string
+        type:
+          type: string
+          enum: [sql_injection, xss, ddos, brute_force, port_scan, phishing]
+        status:
+          type: string
+          enum: [running, completed, blocked]
+        result:
+          type: ["string", "null"]
+        startedAt:
+          type: string
+        completedAt:
+          type: ["string", "null"]
+
+    AttackInput:
+      type: object
+      required:
+        - target
+        - type
+      properties:
+        target:
+          type: string
+        type:
+          type: string
+          enum: [sql_injection, xss, ddos, brute_force, port_scan, phishing]
+
+    Exploit:
+      type: object
+      required:
+        - id
+        - name
+        - category
+        - severity
+        - mitreTactic
+        - description
+        - payload
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        category:
+          type: string
+        severity:
+          type: string
+        mitreTactic:
+          type: string
+        description:
+          type: string
+        payload:
+          type: string
 
     SecurityLog:
       type: object

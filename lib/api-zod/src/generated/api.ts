@@ -52,7 +52,8 @@ export const GetAlertsResponseItem = zod.object({
   "targetPort": zod.number().nullish(),
   "status": zod.enum(['active', 'resolved']),
   "detectedAt": zod.string(),
-  "resolvedAt": zod.string().nullable()
+  "resolvedAt": zod.string().nullable(),
+  "knownThreat": zod.boolean().optional().describe('Source IP matches a known threat indicator')
 })
 export const GetAlertsResponse = zod.array(GetAlertsResponseItem)
 
@@ -79,7 +80,8 @@ export const CreateAlertResponse = zod.object({
   "targetPort": zod.number().nullish(),
   "status": zod.enum(['active', 'resolved']),
   "detectedAt": zod.string(),
-  "resolvedAt": zod.string().nullable()
+  "resolvedAt": zod.string().nullable(),
+  "knownThreat": zod.boolean().optional().describe('Source IP matches a known threat indicator')
 })
 
 
@@ -100,7 +102,8 @@ export const ResolveAlertResponse = zod.object({
   "targetPort": zod.number().nullish(),
   "status": zod.enum(['active', 'resolved']),
   "detectedAt": zod.string(),
-  "resolvedAt": zod.string().nullable()
+  "resolvedAt": zod.string().nullable(),
+  "knownThreat": zod.boolean().optional().describe('Source IP matches a known threat indicator')
 })
 
 
@@ -117,7 +120,8 @@ export const GetRecentAlertsResponseItem = zod.object({
   "targetPort": zod.number().nullish(),
   "status": zod.enum(['active', 'resolved']),
   "detectedAt": zod.string(),
-  "resolvedAt": zod.string().nullable()
+  "resolvedAt": zod.string().nullable(),
+  "knownThreat": zod.boolean().optional().describe('Source IP matches a known threat indicator')
 })
 export const GetRecentAlertsResponse = zod.array(GetRecentAlertsResponseItem)
 
@@ -228,7 +232,8 @@ export const GetConnectionsResponseItem = zod.object({
   "bytesIn": zod.number(),
   "bytesOut": zod.number(),
   "country": zod.string(),
-  "connectedAt": zod.string()
+  "connectedAt": zod.string(),
+  "knownThreat": zod.boolean().optional().describe('Source IP matches a known threat indicator')
 })
 export const GetConnectionsResponse = zod.array(GetConnectionsResponseItem)
 
@@ -251,7 +256,8 @@ export const BlockConnectionResponse = zod.object({
   "bytesIn": zod.number(),
   "bytesOut": zod.number(),
   "country": zod.string(),
-  "connectedAt": zod.string()
+  "connectedAt": zod.string(),
+  "knownThreat": zod.boolean().optional().describe('Source IP matches a known threat indicator')
 })
 
 
@@ -456,5 +462,132 @@ export const GetTrafficStatsResponseItem = zod.object({
   "suspicious": zod.number()
 })
 export const GetTrafficStatsResponse = zod.array(GetTrafficStatsResponseItem)
+
+
+/**
+ * @summary List threat indicators
+ */
+export const GetThreatIndicatorsQueryParams = zod.object({
+  "type": zod.enum(['ip', 'domain', 'hash', 'all']).optional()
+})
+
+export const GetThreatIndicatorsResponseItem = zod.object({
+  "id": zod.number(),
+  "type": zod.enum(['ip', 'domain', 'hash']),
+  "value": zod.string(),
+  "category": zod.enum(['malware', 'botnet', 'phishing', 'c2', 'scanner', 'spam', 'apt', 'other']),
+  "confidence": zod.number().describe('Confidence 0-100'),
+  "source": zod.string(),
+  "description": zod.string(),
+  "firstSeen": zod.string(),
+  "lastSeen": zod.string()
+})
+export const GetThreatIndicatorsResponse = zod.array(GetThreatIndicatorsResponseItem)
+
+
+/**
+ * @summary Create a threat indicator
+ */
+
+export const createThreatIndicatorBodyConfidenceMin = 0;
+export const createThreatIndicatorBodyConfidenceMax = 100;
+
+
+
+export const CreateThreatIndicatorBody = zod.object({
+  "type": zod.enum(['ip', 'domain', 'hash']),
+  "value": zod.string().min(1),
+  "category": zod.enum(['malware', 'botnet', 'phishing', 'c2', 'scanner', 'spam', 'apt', 'other']),
+  "confidence": zod.number().min(createThreatIndicatorBodyConfidenceMin).max(createThreatIndicatorBodyConfidenceMax).optional(),
+  "source": zod.string().optional(),
+  "description": zod.string().optional()
+})
+
+export const CreateThreatIndicatorResponse = zod.object({
+  "id": zod.number(),
+  "type": zod.enum(['ip', 'domain', 'hash']),
+  "value": zod.string(),
+  "category": zod.enum(['malware', 'botnet', 'phishing', 'c2', 'scanner', 'spam', 'apt', 'other']),
+  "confidence": zod.number().describe('Confidence 0-100'),
+  "source": zod.string(),
+  "description": zod.string(),
+  "firstSeen": zod.string(),
+  "lastSeen": zod.string()
+})
+
+
+/**
+ * @summary Update a threat indicator
+ */
+export const UpdateThreatIndicatorParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+
+export const updateThreatIndicatorBodyConfidenceMin = 0;
+export const updateThreatIndicatorBodyConfidenceMax = 100;
+
+
+
+export const UpdateThreatIndicatorBody = zod.object({
+  "type": zod.enum(['ip', 'domain', 'hash']).optional(),
+  "value": zod.string().min(1).optional(),
+  "category": zod.enum(['malware', 'botnet', 'phishing', 'c2', 'scanner', 'spam', 'apt', 'other']).optional(),
+  "confidence": zod.number().min(updateThreatIndicatorBodyConfidenceMin).max(updateThreatIndicatorBodyConfidenceMax).optional(),
+  "source": zod.string().optional(),
+  "description": zod.string().optional()
+})
+
+export const UpdateThreatIndicatorResponse = zod.object({
+  "id": zod.number(),
+  "type": zod.enum(['ip', 'domain', 'hash']),
+  "value": zod.string(),
+  "category": zod.enum(['malware', 'botnet', 'phishing', 'c2', 'scanner', 'spam', 'apt', 'other']),
+  "confidence": zod.number().describe('Confidence 0-100'),
+  "source": zod.string(),
+  "description": zod.string(),
+  "firstSeen": zod.string(),
+  "lastSeen": zod.string()
+})
+
+
+/**
+ * @summary Delete a threat indicator
+ */
+export const DeleteThreatIndicatorParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const DeleteThreatIndicatorResponse = zod.void()
+
+
+/**
+ * @summary Import a batch of sample threat feed entries
+ */
+export const ImportThreatFeedResponse = zod.object({
+  "imported": zod.number().describe('Number of new indicators imported'),
+  "skipped": zod.number().describe('Number of entries skipped as duplicates')
+})
+
+
+/**
+ * @summary Push an IP indicator to the firewall as a deny rule
+ */
+export const BlockThreatIndicatorParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const BlockThreatIndicatorResponse = zod.object({
+  "id": zod.number(),
+  "name": zod.string(),
+  "description": zod.string(),
+  "action": zod.enum(['allow', 'deny', 'drop', 'log']),
+  "protocol": zod.enum(['tcp', 'udp', 'icmp', 'any']),
+  "sourceIp": zod.string().describe('CIDR notation or specific IP, \* for any'),
+  "destinationPort": zod.string().describe('Port number, range, or \* for any'),
+  "enabled": zod.boolean(),
+  "priority": zod.number(),
+  "createdAt": zod.string()
+})
 
 

@@ -5,6 +5,7 @@ import {
   CreateAlertBody,
   ResolveAlertParams,
 } from "@workspace/api-zod";
+import { getKnownThreatIps } from "../lib/threat-match";
 
 const router: IRouter = Router();
 
@@ -25,7 +26,8 @@ router.get("/alerts", async (req, res): Promise<void> => {
     q.limit(parseInt(limit, 10));
   }
   const alerts = await q;
-  res.json(alerts.map(formatAlert));
+  const threatIps = await getKnownThreatIps();
+  res.json(alerts.map((a) => formatAlert(a, threatIps)));
 });
 
 router.post("/alerts", async (req, res): Promise<void> => {
@@ -64,10 +66,11 @@ router.get("/alerts/recent", async (_req, res): Promise<void> => {
   const alerts = await db.select().from(alertsTable)
     .where(gte(alertsTable.detectedAt, since))
     .orderBy(desc(alertsTable.detectedAt));
-  res.json(alerts.map(formatAlert));
+  const threatIps = await getKnownThreatIps();
+  res.json(alerts.map((a) => formatAlert(a, threatIps)));
 });
 
-function formatAlert(a: typeof alertsTable.$inferSelect) {
+function formatAlert(a: typeof alertsTable.$inferSelect, threatIps?: Set<string>) {
   return {
     id: a.id,
     title: a.title,
@@ -79,6 +82,7 @@ function formatAlert(a: typeof alertsTable.$inferSelect) {
     status: a.status,
     detectedAt: a.detectedAt.toISOString(),
     resolvedAt: a.resolvedAt ? a.resolvedAt.toISOString() : null,
+    knownThreat: threatIps ? threatIps.has(a.sourceIp) : false,
   };
 }
 

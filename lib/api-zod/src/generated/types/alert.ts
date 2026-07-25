@@ -22,4 +22,6 @@ export interface Alert {
   detectedAt: string;
   /** @nullable */
   resolvedAt: string | null;
+  /** Source IP matches a known threat indicator */
+  knownThreat?: boolean;
 }

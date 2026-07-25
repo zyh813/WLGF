@@ -140,8 +140,15 @@ export default function Alerts() {
                       </Badge>
                     </TableCell>
                     <TableCell className="font-mono text-primary/80">
-                      {alert.sourceIp}
-                      {alert.targetPort ? `:${alert.targetPort}` : ''}
+                      <div className="flex items-center gap-2">
+                        <span>
+                          {alert.sourceIp}
+                          {alert.targetPort ? `:${alert.targetPort}` : ''}
+                        </span>
+                        {alert.knownThreat && (
+                          <Badge variant="destructive" className="text-[10px] animate-pulse">已知威胁</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {new Date(alert.detectedAt).toLocaleString('zh-CN')}

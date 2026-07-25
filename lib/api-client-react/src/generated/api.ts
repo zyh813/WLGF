@@ -34,6 +34,7 @@ import type {
   GetAssetsParams,
   GetConnectionsParams,
   GetLogsParams,
+  GetThreatIndicatorsParams,
   HealthStatus,
   NetworkConnection,
   ReconInput,
@@ -41,6 +42,10 @@ import type {
   Scan,
   ScanInput,
   SecurityLog,
+  ThreatFeedImportResult,
+  ThreatIndicator,
+  ThreatIndicatorInput,
+  ThreatIndicatorUpdate,
   TrafficStat
 } from './api.schemas';
 
@@ -1818,4 +1823,444 @@ export function useGetTrafficStats<TData = Awaited<ReturnType<typeof getTrafficS
 
 
 
+
+export const getGetThreatIndicatorsUrl = (params?: GetThreatIndicatorsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/threat-intel/indicators?${stringifiedParams}` : `/api/threat-intel/indicators`
+}
+
+/**
+ * @summary List threat indicators
+ */
+export const getThreatIndicators = async (params?: GetThreatIndicatorsParams, options?: RequestInit): Promise<ThreatIndicator[]> => {
+
+  return customFetch<ThreatIndicator[]>(getGetThreatIndicatorsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetThreatIndicatorsQueryKey = (params?: GetThreatIndicatorsParams,) => {
+    return [
+    `/api/threat-intel/indicators`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetThreatIndicatorsQueryOptions = <TData = Awaited<ReturnType<typeof getThreatIndicators>>, TError = ErrorType<unknown>>(params?: GetThreatIndicatorsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getThreatIndicators>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetThreatIndicatorsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getThreatIndicators>>> = ({ signal }) => getThreatIndicators(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getThreatIndicators>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetThreatIndicatorsQueryResult = NonNullable<Awaited<ReturnType<typeof getThreatIndicators>>>
+export type GetThreatIndicatorsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List threat indicators
+ */
+
+export function useGetThreatIndicators<TData = Awaited<ReturnType<typeof getThreatIndicators>>, TError = ErrorType<unknown>>(
+ params?: GetThreatIndicatorsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getThreatIndicators>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetThreatIndicatorsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreateThreatIndicatorUrl = () => {
+
+
+
+
+  return `/api/threat-intel/indicators`
+}
+
+/**
+ * @summary Create a threat indicator
+ */
+export const createThreatIndicator = async (threatIndicatorInput: ThreatIndicatorInput, options?: RequestInit): Promise<ThreatIndicator> => {
+
+  return customFetch<ThreatIndicator>(getCreateThreatIndicatorUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(threatIndicatorInput)
+  }
+);}
+
+
+
+
+
+export const getCreateThreatIndicatorMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createThreatIndicator>>, TError,{data: BodyType<ThreatIndicatorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createThreatIndicator>>, TError,{data: BodyType<ThreatIndicatorInput>}, TContext> => {
+
+const mutationKey = ['createThreatIndicator'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createThreatIndicator>>, {data: BodyType<ThreatIndicatorInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createThreatIndicator(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateThreatIndicatorMutationResult = NonNullable<Awaited<ReturnType<typeof createThreatIndicator>>>
+    export type CreateThreatIndicatorMutationBody = BodyType<ThreatIndicatorInput>
+    export type CreateThreatIndicatorMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a threat indicator
+ */
+export const useCreateThreatIndicator = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createThreatIndicator>>, TError,{data: BodyType<ThreatIndicatorInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createThreatIndicator>>,
+        TError,
+        {data: BodyType<ThreatIndicatorInput>},
+        TContext
+      > => {
+      return useMutation(getCreateThreatIndicatorMutationOptions(options));
+    }
+
+export const getUpdateThreatIndicatorUrl = (id: number,) => {
+
+
+
+
+  return `/api/threat-intel/indicators/${id}`
+}
+
+/**
+ * @summary Update a threat indicator
+ */
+export const updateThreatIndicator = async (id: number,
+    threatIndicatorUpdate: ThreatIndicatorUpdate, options?: RequestInit): Promise<ThreatIndicator> => {
+
+  return customFetch<ThreatIndicator>(getUpdateThreatIndicatorUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(threatIndicatorUpdate)
+  }
+);}
+
+
+
+
+
+export const getUpdateThreatIndicatorMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateThreatIndicator>>, TError,{id: number;data: BodyType<ThreatIndicatorUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateThreatIndicator>>, TError,{id: number;data: BodyType<ThreatIndicatorUpdate>}, TContext> => {
+
+const mutationKey = ['updateThreatIndicator'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateThreatIndicator>>, {id: number;data: BodyType<ThreatIndicatorUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateThreatIndicator(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateThreatIndicatorMutationResult = NonNullable<Awaited<ReturnType<typeof updateThreatIndicator>>>
+    export type UpdateThreatIndicatorMutationBody = BodyType<ThreatIndicatorUpdate>
+    export type UpdateThreatIndicatorMutationError = ErrorType<void>
+
+    /**
+ * @summary Update a threat indicator
+ */
+export const useUpdateThreatIndicator = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateThreatIndicator>>, TError,{id: number;data: BodyType<ThreatIndicatorUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateThreatIndicator>>,
+        TError,
+        {id: number;data: BodyType<ThreatIndicatorUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateThreatIndicatorMutationOptions(options));
+    }
+
+export const getDeleteThreatIndicatorUrl = (id: number,) => {
+
+
+
+
+  return `/api/threat-intel/indicators/${id}`
+}
+
+/**
+ * @summary Delete a threat indicator
+ */
+export const deleteThreatIndicator = async (id: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteThreatIndicatorUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteThreatIndicatorMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteThreatIndicator>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteThreatIndicator>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['deleteThreatIndicator'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteThreatIndicator>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteThreatIndicator(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteThreatIndicatorMutationResult = NonNullable<Awaited<ReturnType<typeof deleteThreatIndicator>>>
+
+    export type DeleteThreatIndicatorMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a threat indicator
+ */
+export const useDeleteThreatIndicator = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteThreatIndicator>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteThreatIndicator>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getDeleteThreatIndicatorMutationOptions(options));
+    }
+
+export const getImportThreatFeedUrl = () => {
+
+
+
+
+  return `/api/threat-intel/import`
+}
+
+/**
+ * @summary Import a batch of sample threat feed entries
+ */
+export const importThreatFeed = async ( options?: RequestInit): Promise<ThreatFeedImportResult> => {
+
+  return customFetch<ThreatFeedImportResult>(getImportThreatFeedUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getImportThreatFeedMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importThreatFeed>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof importThreatFeed>>, TError,void, TContext> => {
+
+const mutationKey = ['importThreatFeed'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof importThreatFeed>>, void> = () => {
+
+
+          return  importThreatFeed(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ImportThreatFeedMutationResult = NonNullable<Awaited<ReturnType<typeof importThreatFeed>>>
+
+    export type ImportThreatFeedMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Import a batch of sample threat feed entries
+ */
+export const useImportThreatFeed = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof importThreatFeed>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof importThreatFeed>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getImportThreatFeedMutationOptions(options));
+    }
+
+export const getBlockThreatIndicatorUrl = (id: number,) => {
+
+
+
+
+  return `/api/threat-intel/indicators/${id}/block`
+}
+
+/**
+ * @summary Push an IP indicator to the firewall as a deny rule
+ */
+export const blockThreatIndicator = async (id: number, options?: RequestInit): Promise<FirewallRule> => {
+
+  return customFetch<FirewallRule>(getBlockThreatIndicatorUrl(id),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getBlockThreatIndicatorMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof blockThreatIndicator>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof blockThreatIndicator>>, TError,{id: number}, TContext> => {
+
+const mutationKey = ['blockThreatIndicator'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof blockThreatIndicator>>, {id: number}> = (props) => {
+          const {id} = props ?? {};
+
+          return  blockThreatIndicator(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type BlockThreatIndicatorMutationResult = NonNullable<Awaited<ReturnType<typeof blockThreatIndicator>>>
+
+    export type BlockThreatIndicatorMutationError = ErrorType<void>
+
+    /**
+ * @summary Push an IP indicator to the firewall as a deny rule
+ */
+export const useBlockThreatIndicator = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof blockThreatIndicator>>, TError,{id: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof blockThreatIndicator>>,
+        TError,
+        {id: number},
+        TContext
+      > => {
+      return useMutation(getBlockThreatIndicatorMutationOptions(options));
+    }
 

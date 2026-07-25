@@ -28,6 +28,8 @@ tags:
     description: Attack simulation and exploit catalog
   - name: recon
     description: Reconnaissance and asset discovery
+  - name: threatIntel
+    description: Threat intelligence indicators (IOC)
 
 paths:
   /healthz:
@@ -448,6 +450,124 @@ paths:
                 items:
                   $ref: "#/components/schemas/TrafficStat"
 
+  /threat-intel/indicators:
+    get:
+      operationId: getThreatIndicators
+      tags: [threatIntel]
+      summary: List threat indicators
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [ip, domain, hash, all]
+      responses:
+        "200":
+          description: List of threat indicators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ThreatIndicator"
+    post:
+      operationId: createThreatIndicator
+      tags: [threatIntel]
+      summary: Create a threat indicator
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ThreatIndicatorInput"
+      responses:
+        "201":
+          description: Created indicator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreatIndicator"
+
+  /threat-intel/indicators/{id}:
+    patch:
+      operationId: updateThreatIndicator
+      tags: [threatIntel]
+      summary: Update a threat indicator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ThreatIndicatorUpdate"
+      responses:
+        "200":
+          description: Updated indicator
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreatIndicator"
+        "404":
+          description: Indicator not found
+    delete:
+      operationId: deleteThreatIndicator
+      tags: [threatIntel]
+      summary: Delete a threat indicator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+        "404":
+          description: Indicator not found
+
+  /threat-intel/import:
+    post:
+      operationId: importThreatFeed
+      tags: [threatIntel]
+      summary: Import a batch of sample threat feed entries
+      responses:
+        "201":
+          description: Import result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThreatFeedImportResult"
+
+  /threat-intel/indicators/{id}/block:
+    post:
+      operationId: blockThreatIndicator
+      tags: [threatIntel]
+      summary: Push an IP indicator to the firewall as a deny rule
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "201":
+          description: Created firewall rule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FirewallRule"
+        "400":
+          description: Indicator is not an IP type
+        "404":
+          description: Indicator not found
+        "409":
+          description: Firewall rule already exists for this IP
+
 components:
   schemas:
     HealthStatus:
@@ -524,6 +644,9 @@ components:
           type: string
         resolvedAt:
           type: ["string", "null"]
+        knownThreat:
+          type: boolean
+          description: Source IP matches a known threat indicator
 
     AlertInput:
       type: object
@@ -677,6 +800,103 @@ components:
           type: string
         connectedAt:
           type: string
+        knownThreat:
+          type: boolean
+          description: Source IP matches a known threat indicator
+
+    ThreatIndicator:
+      type: object
+      required:
+        - id
+        - type
+        - value
+        - category
+        - confidence
+        - source
+        - description
+        - firstSeen
+        - lastSeen
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [ip, domain, hash]
+        value:
+          type: string
+        category:
+          type: string
+          enum: [malware, botnet, phishing, c2, scanner, spam, apt, other]
+        confidence:
+          type: integer
+          description: Confidence 0-100
+        source:
+          type: string
+        description:
+          type: string
+        firstSeen:
+          type: string
+        lastSeen:
+          type: string
+
+    ThreatIndicatorInput:
+      type: object
+      required:
+        - type
+        - value
+        - category
+      properties:
+        type:
+          type: string
+          enum: [ip, domain, hash]
+        value:
+          type: string
+          minLength: 1
+        category:
+          type: string
+          enum: [malware, botnet, phishing, c2, scanner, spam, apt, other]
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        source:
+          type: string
+        description:
+          type: string
+
+    ThreatIndicatorUpdate:
+      type: object
+      properties:
+        type:
+          type: string
+          enum: [ip, domain, hash]
+        value:
+          type: string
+          minLength: 1
+        category:
+          type: string
+          enum: [malware, botnet, phishing, c2, scanner, spam, apt, other]
+        confidence:
+          type: integer
+          minimum: 0
+          maximum: 100
+        source:
+          type: string
+        description:
+          type: string
+
+    ThreatFeedImportResult:
+      type: object
+      required:
+        - imported
+        - skipped
+      properties:
+        imported:
+          type: integer
+          description: Number of new indicators imported
+        skipped:
+          type: integer
+          description: Number of entries skipped as duplicates
 
     Scan:
       type: object

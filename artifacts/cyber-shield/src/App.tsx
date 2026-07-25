@@ -14,6 +14,7 @@ import Scans from '@/pages/Scans';
 import Assets from '@/pages/Assets';
 import Attacks from '@/pages/Attacks';
 import Logs from '@/pages/Logs';
+import ThreatIntel from '@/pages/ThreatIntel';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -32,6 +33,7 @@ function Router() {
         <Route path="/alerts" component={Alerts} />
         <Route path="/firewall" component={Firewall} />
         <Route path="/connections" component={Connections} />
+        <Route path="/threat-intel" component={ThreatIntel} />
         <Route path="/assets" component={Assets} />
         <Route path="/scans" component={Scans} />
         <Route path="/attacks" component={Attacks} />

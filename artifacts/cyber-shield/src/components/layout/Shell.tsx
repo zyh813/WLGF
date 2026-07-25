@@ -8,7 +8,8 @@ import {
   ScrollText,
   Swords,
   ActivityIcon,
-  Network
+  Network,
+  Crosshair
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ const navItems = [
   { href: "/alerts", label: "安全告警", icon: ShieldAlert },
   { href: "/firewall", label: "防火墙", icon: Shield },
   { href: "/connections", label: "网络连接", icon: Activity },
+  { href: "/threat-intel", label: "威胁情报", icon: Crosshair },
   { href: "/assets", label: "资产测绘", icon: Network },
   { href: "/scans", label: "漏洞扫描", icon: Radar },
   { href: "/attacks", label: "攻击模拟", icon: Swords },

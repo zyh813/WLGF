@@ -20,4 +20,6 @@ export interface NetworkConnection {
   bytesOut: number;
   country: string;
   connectedAt: string;
+  /** Source IP matches a known threat indicator */
+  knownThreat?: boolean;
 }

@@ -67,6 +67,8 @@ export interface Alert {
   detectedAt: string;
   /** @nullable */
   resolvedAt: string | null;
+  /** Source IP matches a known threat indicator */
+  knownThreat?: boolean;
 }
 
 export type AlertInputSeverity = typeof AlertInputSeverity[keyof typeof AlertInputSeverity];
@@ -230,6 +232,125 @@ export interface NetworkConnection {
   bytesOut: number;
   country: string;
   connectedAt: string;
+  /** Source IP matches a known threat indicator */
+  knownThreat?: boolean;
+}
+
+export type ThreatIndicatorType = typeof ThreatIndicatorType[keyof typeof ThreatIndicatorType];
+
+
+export const ThreatIndicatorType = {
+  ip: 'ip',
+  domain: 'domain',
+  hash: 'hash',
+} as const;
+
+export type ThreatIndicatorCategory = typeof ThreatIndicatorCategory[keyof typeof ThreatIndicatorCategory];
+
+
+export const ThreatIndicatorCategory = {
+  malware: 'malware',
+  botnet: 'botnet',
+  phishing: 'phishing',
+  c2: 'c2',
+  scanner: 'scanner',
+  spam: 'spam',
+  apt: 'apt',
+  other: 'other',
+} as const;
+
+export interface ThreatIndicator {
+  id: number;
+  type: ThreatIndicatorType;
+  value: string;
+  category: ThreatIndicatorCategory;
+  /** Confidence 0-100 */
+  confidence: number;
+  source: string;
+  description: string;
+  firstSeen: string;
+  lastSeen: string;
+}
+
+export type ThreatIndicatorInputType = typeof ThreatIndicatorInputType[keyof typeof ThreatIndicatorInputType];
+
+
+export const ThreatIndicatorInputType = {
+  ip: 'ip',
+  domain: 'domain',
+  hash: 'hash',
+} as const;
+
+export type ThreatIndicatorInputCategory = typeof ThreatIndicatorInputCategory[keyof typeof ThreatIndicatorInputCategory];
+
+
+export const ThreatIndicatorInputCategory = {
+  malware: 'malware',
+  botnet: 'botnet',
+  phishing: 'phishing',
+  c2: 'c2',
+  scanner: 'scanner',
+  spam: 'spam',
+  apt: 'apt',
+  other: 'other',
+} as const;
+
+export interface ThreatIndicatorInput {
+  type: ThreatIndicatorInputType;
+  /** @minLength 1 */
+  value: string;
+  category: ThreatIndicatorInputCategory;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  confidence?: number;
+  source?: string;
+  description?: string;
+}
+
+export type ThreatIndicatorUpdateType = typeof ThreatIndicatorUpdateType[keyof typeof ThreatIndicatorUpdateType];
+
+
+export const ThreatIndicatorUpdateType = {
+  ip: 'ip',
+  domain: 'domain',
+  hash: 'hash',
+} as const;
+
+export type ThreatIndicatorUpdateCategory = typeof ThreatIndicatorUpdateCategory[keyof typeof ThreatIndicatorUpdateCategory];
+
+
+export const ThreatIndicatorUpdateCategory = {
+  malware: 'malware',
+  botnet: 'botnet',
+  phishing: 'phishing',
+  c2: 'c2',
+  scanner: 'scanner',
+  spam: 'spam',
+  apt: 'apt',
+  other: 'other',
+} as const;
+
+export interface ThreatIndicatorUpdate {
+  type?: ThreatIndicatorUpdateType;
+  /** @minLength 1 */
+  value?: string;
+  category?: ThreatIndicatorUpdateCategory;
+  /**
+     * @minimum 0
+     * @maximum 100
+     */
+  confidence?: number;
+  source?: string;
+  description?: string;
+}
+
+export interface ThreatFeedImportResult {
+  /** Number of new indicators imported */
+  imported: number;
+  /** Number of entries skipped as duplicates */
+  skipped: number;
 }
 
 export type ScanType = typeof ScanType[keyof typeof ScanType];
@@ -485,5 +606,19 @@ export const GetLogsLevel = {
   warning: 'warning',
   error: 'error',
   critical: 'critical',
+} as const;
+
+export type GetThreatIndicatorsParams = {
+type?: GetThreatIndicatorsType;
+};
+
+export type GetThreatIndicatorsType = typeof GetThreatIndicatorsType[keyof typeof GetThreatIndicatorsType];
+
+
+export const GetThreatIndicatorsType = {
+  ip: 'ip',
+  domain: 'domain',
+  hash: 'hash',
+  all: 'all',
 } as const;
 

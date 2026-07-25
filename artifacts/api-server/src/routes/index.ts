@@ -8,6 +8,7 @@ import reconRouter from "./recon";
 import attacksRouter from "./attacks";
 import logsRouter from "./security-logs";
 import dashboardRouter from "./dashboard";
+import threatIntelRouter from "./threat-intel";
 
 const router: IRouter = Router();
 
@@ -20,5 +21,6 @@ router.use(scansRouter);
 router.use(reconRouter);
 router.use(attacksRouter);
 router.use(logsRouter);
+router.use(threatIntelRouter);
 
 export default router;

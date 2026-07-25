@@ -2,6 +2,7 @@ import { Router, type IRouter } from "express";
 import { eq, desc } from "drizzle-orm";
 import { db, connectionsTable } from "@workspace/db";
 import { BlockConnectionParams } from "@workspace/api-zod";
+import { getKnownThreatIps } from "../lib/threat-match";
 
 const router: IRouter = Router();
 
@@ -12,7 +13,8 @@ router.get("/connections", async (req, res): Promise<void> => {
     q.where(eq(connectionsTable.status, status as "active" | "blocked" | "suspicious"));
   }
   const connections = await q;
-  res.json(connections.map(formatConnection));
+  const threatIps = await getKnownThreatIps();
+  res.json(connections.map((c) => formatConnection(c, threatIps)));
 });
 
 router.post("/connections/:id/block", async (req, res): Promise<void> => {
@@ -33,7 +35,7 @@ router.post("/connections/:id/block", async (req, res): Promise<void> => {
   res.json(formatConnection(conn));
 });
 
-function formatConnection(c: typeof connectionsTable.$inferSelect) {
+function formatConnection(c: typeof connectionsTable.$inferSelect, threatIps?: Set<string>) {
   return {
     id: c.id,
     sourceIp: c.sourceIp,
@@ -46,6 +48,7 @@ function formatConnection(c: typeof connectionsTable.$inferSelect) {
     bytesOut: c.bytesOut,
     country: c.country,
     connectedAt: c.connectedAt.toISOString(),
+    knownThreat: threatIps ? threatIps.has(c.sourceIp) : false,
   };
 }
 

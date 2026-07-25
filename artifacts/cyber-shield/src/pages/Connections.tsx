@@ -108,7 +108,12 @@ export default function Connections() {
                       {conn.status === 'blocked' && <Badge variant="destructive">已封锁</Badge>}
                     </TableCell>
                     <TableCell>
-                      <div className="font-mono text-sm text-primary/90">{conn.sourceIp}</div>
+                      <div className="font-mono text-sm text-primary/90 flex items-center gap-2">
+                        {conn.sourceIp}
+                        {conn.knownThreat && (
+                          <Badge variant="destructive" className="text-[10px] animate-pulse">已知威胁</Badge>
+                        )}
+                      </div>
                       <div className="font-mono text-[10px] text-muted-foreground">端口 {conn.sourcePort}</div>
                     </TableCell>
                     <TableCell>

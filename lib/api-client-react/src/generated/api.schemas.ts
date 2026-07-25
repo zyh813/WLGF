@@ -339,6 +339,57 @@ export interface Exploit {
   payload: string;
 }
 
+export interface AssetService {
+  port: number;
+  protocol: string;
+  service: string;
+  version: string;
+}
+
+export type AssetRiskLevel = typeof AssetRiskLevel[keyof typeof AssetRiskLevel];
+
+
+export const AssetRiskLevel = {
+  critical: 'critical',
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
+} as const;
+
+export interface Asset {
+  id: number;
+  host: string;
+  ipAddress: string;
+  os: string;
+  services: AssetService[];
+  riskLevel: AssetRiskLevel;
+  openVulnerabilities: number;
+  lastSeen: string;
+}
+
+export type ReconJobStatus = typeof ReconJobStatus[keyof typeof ReconJobStatus];
+
+
+export const ReconJobStatus = {
+  running: 'running',
+  completed: 'completed',
+  failed: 'failed',
+} as const;
+
+export interface ReconJob {
+  id: number;
+  target: string;
+  status: ReconJobStatus;
+  discoveredCount: number;
+  startedAt: string;
+  /** @nullable */
+  completedAt: string | null;
+}
+
+export interface ReconInput {
+  target: string;
+}
+
 export type SecurityLogLevel = typeof SecurityLogLevel[keyof typeof SecurityLogLevel];
 
 
@@ -403,6 +454,21 @@ export const GetConnectionsStatus = {
   active: 'active',
   blocked: 'blocked',
   suspicious: 'suspicious',
+  all: 'all',
+} as const;
+
+export type GetAssetsParams = {
+risk?: GetAssetsRisk;
+};
+
+export type GetAssetsRisk = typeof GetAssetsRisk[keyof typeof GetAssetsRisk];
+
+
+export const GetAssetsRisk = {
+  critical: 'critical',
+  high: 'high',
+  medium: 'medium',
+  low: 'low',
   all: 'all',
 } as const;
 

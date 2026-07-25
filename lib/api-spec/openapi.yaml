@@ -26,6 +26,8 @@ tags:
     description: Network traffic analysis
   - name: attacks
     description: Attack simulation and exploit catalog
+  - name: recon
+    description: Reconnaissance and asset discovery
 
 paths:
   /healthz:
@@ -331,6 +333,80 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Exploit"
+
+  /assets:
+    get:
+      operationId: getAssets
+      tags: [recon]
+      summary: List discovered assets
+      parameters:
+        - name: risk
+          in: query
+          schema:
+            type: string
+            enum: [critical, high, medium, low, all]
+      responses:
+        "200":
+          description: List of assets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Asset"
+
+  /assets/{id}:
+    get:
+      operationId: getAsset
+      tags: [recon]
+      summary: Get asset detail
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Asset detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Asset"
+        "404":
+          description: Asset not found
+
+  /recon-jobs:
+    get:
+      operationId: getReconJobs
+      tags: [recon]
+      summary: List reconnaissance jobs
+      responses:
+        "200":
+          description: List of recon jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ReconJob"
+    post:
+      operationId: startReconJob
+      tags: [recon]
+      summary: Launch a simulated reconnaissance sweep
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReconInput"
+      responses:
+        "201":
+          description: Recon job started
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReconJob"
 
   /logs:
     get:
@@ -718,6 +794,87 @@ components:
         description:
           type: string
         payload:
+          type: string
+
+    AssetService:
+      type: object
+      required:
+        - port
+        - protocol
+        - service
+        - version
+      properties:
+        port:
+          type: integer
+        protocol:
+          type: string
+        service:
+          type: string
+        version:
+          type: string
+
+    Asset:
+      type: object
+      required:
+        - id
+        - host
+        - ipAddress
+        - os
+        - services
+        - riskLevel
+        - openVulnerabilities
+        - lastSeen
+      properties:
+        id:
+          type: integer
+        host:
+          type: string
+        ipAddress:
+          type: string
+        os:
+          type: string
+        services:
+          type: array
+          items:
+            $ref: "#/components/schemas/AssetService"
+        riskLevel:
+          type: string
+          enum: [critical, high, medium, low]
+        openVulnerabilities:
+          type: integer
+        lastSeen:
+          type: string
+
+    ReconJob:
+      type: object
+      required:
+        - id
+        - target
+        - status
+        - discoveredCount
+        - startedAt
+        - completedAt
+      properties:
+        id:
+          type: integer
+        target:
+          type: string
+        status:
+          type: string
+          enum: [running, completed, failed]
+        discoveredCount:
+          type: integer
+        startedAt:
+          type: string
+        completedAt:
+          type: ["string", "null"]
+
+    ReconInput:
+      type: object
+      required:
+        - target
+      properties:
+        target:
           type: string
 
     SecurityLog:

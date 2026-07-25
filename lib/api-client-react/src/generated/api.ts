@@ -22,6 +22,7 @@ import type {
 import type {
   Alert,
   AlertInput,
+  Asset,
   AttackCampaign,
   AttackInput,
   DashboardSummary,
@@ -30,10 +31,13 @@ import type {
   FirewallRuleInput,
   FirewallRuleUpdate,
   GetAlertsParams,
+  GetAssetsParams,
   GetConnectionsParams,
   GetLogsParams,
   HealthStatus,
   NetworkConnection,
+  ReconInput,
+  ReconJob,
   Scan,
   ScanInput,
   SecurityLog,
@@ -1344,6 +1348,315 @@ export function useGetExploits<TData = Awaited<ReturnType<typeof getExploits>>, 
 
 
 
+
+export const getGetAssetsUrl = (params?: GetAssetsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : String(value))
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/assets?${stringifiedParams}` : `/api/assets`
+}
+
+/**
+ * @summary List discovered assets
+ */
+export const getAssets = async (params?: GetAssetsParams, options?: RequestInit): Promise<Asset[]> => {
+
+  return customFetch<Asset[]>(getGetAssetsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssetsQueryKey = (params?: GetAssetsParams,) => {
+    return [
+    `/api/assets`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAssetsQueryOptions = <TData = Awaited<ReturnType<typeof getAssets>>, TError = ErrorType<unknown>>(params?: GetAssetsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssetsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAssets>>> = ({ signal }) => getAssets(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssetsQueryResult = NonNullable<Awaited<ReturnType<typeof getAssets>>>
+export type GetAssetsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List discovered assets
+ */
+
+export function useGetAssets<TData = Awaited<ReturnType<typeof getAssets>>, TError = ErrorType<unknown>>(
+ params?: GetAssetsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAssets>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssetsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetAssetUrl = (id: number,) => {
+
+
+
+
+  return `/api/assets/${id}`
+}
+
+/**
+ * @summary Get asset detail
+ */
+export const getAsset = async (id: number, options?: RequestInit): Promise<Asset> => {
+
+  return customFetch<Asset>(getGetAssetUrl(id),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAssetQueryKey = (id: number,) => {
+    return [
+    `/api/assets/${id}`
+    ] as const;
+    }
+
+
+export const getGetAssetQueryOptions = <TData = Awaited<ReturnType<typeof getAsset>>, TError = ErrorType<void>>(id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAssetQueryKey(id);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAsset>>> = ({ signal }) => getAsset(id, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: id !== null && id !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAssetQueryResult = NonNullable<Awaited<ReturnType<typeof getAsset>>>
+export type GetAssetQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get asset detail
+ */
+
+export function useGetAsset<TData = Awaited<ReturnType<typeof getAsset>>, TError = ErrorType<void>>(
+ id: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAsset>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAssetQueryOptions(id,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetReconJobsUrl = () => {
+
+
+
+
+  return `/api/recon-jobs`
+}
+
+/**
+ * @summary List reconnaissance jobs
+ */
+export const getReconJobs = async ( options?: RequestInit): Promise<ReconJob[]> => {
+
+  return customFetch<ReconJob[]>(getGetReconJobsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetReconJobsQueryKey = () => {
+    return [
+    `/api/recon-jobs`
+    ] as const;
+    }
+
+
+export const getGetReconJobsQueryOptions = <TData = Awaited<ReturnType<typeof getReconJobs>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReconJobs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetReconJobsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getReconJobs>>> = ({ signal }) => getReconJobs({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getReconJobs>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetReconJobsQueryResult = NonNullable<Awaited<ReturnType<typeof getReconJobs>>>
+export type GetReconJobsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List reconnaissance jobs
+ */
+
+export function useGetReconJobs<TData = Awaited<ReturnType<typeof getReconJobs>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getReconJobs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetReconJobsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getStartReconJobUrl = () => {
+
+
+
+
+  return `/api/recon-jobs`
+}
+
+/**
+ * @summary Launch a simulated reconnaissance sweep
+ */
+export const startReconJob = async (reconInput: ReconInput, options?: RequestInit): Promise<ReconJob> => {
+
+  return customFetch<ReconJob>(getStartReconJobUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(reconInput)
+  }
+);}
+
+
+
+
+
+export const getStartReconJobMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startReconJob>>, TError,{data: BodyType<ReconInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof startReconJob>>, TError,{data: BodyType<ReconInput>}, TContext> => {
+
+const mutationKey = ['startReconJob'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof startReconJob>>, {data: BodyType<ReconInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  startReconJob(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type StartReconJobMutationResult = NonNullable<Awaited<ReturnType<typeof startReconJob>>>
+    export type StartReconJobMutationBody = BodyType<ReconInput>
+    export type StartReconJobMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Launch a simulated reconnaissance sweep
+ */
+export const useStartReconJob = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof startReconJob>>, TError,{data: BodyType<ReconInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof startReconJob>>,
+        TError,
+        {data: BodyType<ReconInput>},
+        TContext
+      > => {
+      return useMutation(getStartReconJobMutationOptions(options));
+    }
 
 export const getGetLogsUrl = (params?: GetLogsParams,) => {
   const normalizedParams = new URLSearchParams();

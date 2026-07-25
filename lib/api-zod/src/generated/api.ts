@@ -347,6 +347,86 @@ export const GetExploitsResponse = zod.array(GetExploitsResponseItem)
 
 
 /**
+ * @summary List discovered assets
+ */
+export const GetAssetsQueryParams = zod.object({
+  "risk": zod.enum(['critical', 'high', 'medium', 'low', 'all']).optional()
+})
+
+export const GetAssetsResponseItem = zod.object({
+  "id": zod.number(),
+  "host": zod.string(),
+  "ipAddress": zod.string(),
+  "os": zod.string(),
+  "services": zod.array(zod.object({
+  "port": zod.number(),
+  "protocol": zod.string(),
+  "service": zod.string(),
+  "version": zod.string()
+})),
+  "riskLevel": zod.enum(['critical', 'high', 'medium', 'low']),
+  "openVulnerabilities": zod.number(),
+  "lastSeen": zod.string()
+})
+export const GetAssetsResponse = zod.array(GetAssetsResponseItem)
+
+
+/**
+ * @summary Get asset detail
+ */
+export const GetAssetParams = zod.object({
+  "id": zod.coerce.number()
+})
+
+export const GetAssetResponse = zod.object({
+  "id": zod.number(),
+  "host": zod.string(),
+  "ipAddress": zod.string(),
+  "os": zod.string(),
+  "services": zod.array(zod.object({
+  "port": zod.number(),
+  "protocol": zod.string(),
+  "service": zod.string(),
+  "version": zod.string()
+})),
+  "riskLevel": zod.enum(['critical', 'high', 'medium', 'low']),
+  "openVulnerabilities": zod.number(),
+  "lastSeen": zod.string()
+})
+
+
+/**
+ * @summary List reconnaissance jobs
+ */
+export const GetReconJobsResponseItem = zod.object({
+  "id": zod.number(),
+  "target": zod.string(),
+  "status": zod.enum(['running', 'completed', 'failed']),
+  "discoveredCount": zod.number(),
+  "startedAt": zod.string(),
+  "completedAt": zod.string().nullable()
+})
+export const GetReconJobsResponse = zod.array(GetReconJobsResponseItem)
+
+
+/**
+ * @summary Launch a simulated reconnaissance sweep
+ */
+export const StartReconJobBody = zod.object({
+  "target": zod.string()
+})
+
+export const StartReconJobResponse = zod.object({
+  "id": zod.number(),
+  "target": zod.string(),
+  "status": zod.enum(['running', 'completed', 'failed']),
+  "discoveredCount": zod.number(),
+  "startedAt": zod.string(),
+  "completedAt": zod.string().nullable()
+})
+
+
+/**
  * @summary List security audit logs
  */
 export const GetLogsQueryParams = zod.object({

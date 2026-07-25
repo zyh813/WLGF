@@ -1,0 +1,27 @@
+kind = "web"
+previewPath = "/"
+title = "CyberShield 网络攻防平台"
+version = "1.0.0"
+id = "artifacts/cyber-shield"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 25120
+
+[services.development]
+run = "pnpm --filter @workspace/cyber-shield run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/cyber-shield", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/cyber-shield/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "25120"
+BASE_PATH = "/"

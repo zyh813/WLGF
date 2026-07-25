@@ -2,7 +2,14 @@ import { useGetDashboardSummary, useGetTrafficStats, useGetRecentAlerts } from "
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { Shield, ShieldAlert, Activity, GitNetwork, CheckCircle2 } from "lucide-react";
+import { Shield, ShieldAlert, Activity, CheckCircle2 } from "lucide-react";
+
+const severityLabel: Record<string, string> = {
+  critical: "严重",
+  high: "高危",
+  medium: "中危",
+  low: "低危",
+};
 
 export default function Dashboard() {
   const { data: summary, isLoading: isSummaryLoading } = useGetDashboardSummary();
@@ -10,7 +17,7 @@ export default function Dashboard() {
   const { data: alerts, isLoading: isAlertsLoading } = useGetRecentAlerts();
 
   if (isSummaryLoading || isTrafficLoading || isAlertsLoading) {
-    return <div className="flex items-center justify-center h-full text-primary font-mono animate-pulse">Initializing Dashboard...</div>;
+    return <div className="flex items-center justify-center h-full text-primary font-mono animate-pulse">正在初始化仪表盘...</div>;
   }
 
   const scoreColor = (summary?.securityScore || 0) > 80 ? "text-success" : (summary?.securityScore || 0) > 60 ? "text-warning" : "text-destructive";
@@ -21,14 +28,14 @@ export default function Dashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-display font-bold uppercase tracking-widest text-primary drop-shadow-[0_0_10px_rgba(0,255,255,0.5)]">
-            Network Operations
+            网络安全态势
           </h1>
-          <p className="text-muted-foreground font-mono text-sm mt-1">Real-time threat telemetry and security posture</p>
+          <p className="text-muted-foreground font-mono text-sm mt-1">实时威胁监测与安全态势感知</p>
         </div>
         <div className="flex items-center gap-4">
           <div className="text-right">
-            <div className="text-xs font-mono text-muted-foreground uppercase">Threat Level</div>
-            <div className="font-display font-bold text-warning text-xl tracking-widest uppercase">Elevated</div>
+            <div className="text-xs font-mono text-muted-foreground uppercase">当前威胁等级</div>
+            <div className="font-display font-bold text-warning text-xl tracking-widest uppercase">警戒</div>
           </div>
         </div>
       </div>
@@ -38,7 +45,7 @@ export default function Dashboard() {
         <Card className="border-primary/20 bg-primary/5">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-mono text-muted-foreground uppercase mb-1">Security Score</p>
+              <p className="text-xs font-mono text-muted-foreground uppercase mb-1">安全评分</p>
               <h2 className={`text-4xl font-display font-bold ${scoreColor} ${scoreDropShadow}`}>
                 {summary?.securityScore}%
               </h2>
@@ -50,7 +57,7 @@ export default function Dashboard() {
         <Card className="border-destructive/20 bg-destructive/5">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-mono text-muted-foreground uppercase mb-1">Active Threats</p>
+              <p className="text-xs font-mono text-muted-foreground uppercase mb-1">活跃威胁</p>
               <h2 className="text-4xl font-display font-bold text-destructive drop-shadow-[0_0_15px_hsl(var(--destructive))]">
                 {summary?.activeThreats}
               </h2>
@@ -62,7 +69,7 @@ export default function Dashboard() {
         <Card className="border-warning/20 bg-warning/5">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-mono text-muted-foreground uppercase mb-1">Blocked Connections</p>
+              <p className="text-xs font-mono text-muted-foreground uppercase mb-1">已封锁连接</p>
               <h2 className="text-4xl font-display font-bold text-warning drop-shadow-[0_0_15px_hsl(var(--warning))]">
                 {summary?.blockedConnections}
               </h2>
@@ -74,7 +81,7 @@ export default function Dashboard() {
         <Card className="border-success/20 bg-success/5">
           <CardContent className="p-6 flex items-center justify-between">
             <div>
-              <p className="text-xs font-mono text-muted-foreground uppercase mb-1">Resolved Today</p>
+              <p className="text-xs font-mono text-muted-foreground uppercase mb-1">今日已处置</p>
               <h2 className="text-4xl font-display font-bold text-success drop-shadow-[0_0_15px_hsl(var(--success))]">
                 {summary?.resolvedToday}
               </h2>
@@ -88,8 +95,8 @@ export default function Dashboard() {
         {/* Traffic Chart */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Network Traffic (24h)</CardTitle>
-            <CardDescription>Inbound vs Outbound volume with blocked anomalies</CardDescription>
+            <CardTitle>网络流量（近24小时）</CardTitle>
+            <CardDescription>入站与出站流量及拦截异常统计</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="h-[300px] w-full">
@@ -110,7 +117,7 @@ export default function Dashboard() {
                     dataKey="hour" 
                     stroke="hsl(var(--muted-foreground))" 
                     fontSize={12} 
-                    tickFormatter={(val) => val.split(':')[0] + 'h'}
+                    tickFormatter={(val) => val.split(':')[0] + '时'}
                     fontFamily="var(--app-font-mono)"
                   />
                   <YAxis 
@@ -121,9 +128,10 @@ export default function Dashboard() {
                   <Tooltip 
                     contentStyle={{ backgroundColor: 'hsl(var(--card))', borderColor: 'hsl(var(--border))', fontFamily: 'var(--app-font-mono)', fontSize: '12px' }}
                     itemStyle={{ color: 'hsl(var(--foreground))' }}
+                    formatter={(value, name) => [value, name === 'inbound' ? '入站' : '拦截']}
                   />
-                  <Area type="monotone" dataKey="inbound" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorInbound)" />
-                  <Area type="monotone" dataKey="blocked" stroke="hsl(var(--destructive))" fillOpacity={1} fill="url(#colorBlocked)" />
+                  <Area type="monotone" dataKey="inbound" name="inbound" stroke="hsl(var(--primary))" fillOpacity={1} fill="url(#colorInbound)" />
+                  <Area type="monotone" dataKey="blocked" name="blocked" stroke="hsl(var(--destructive))" fillOpacity={1} fill="url(#colorBlocked)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -133,8 +141,8 @@ export default function Dashboard() {
         {/* Recent Alerts Feed */}
         <Card>
           <CardHeader>
-            <CardTitle>Recent Alerts Feed</CardTitle>
-            <CardDescription>Live threat detection events</CardDescription>
+            <CardTitle>实时告警动态</CardTitle>
+            <CardDescription>近24小时威胁检测事件</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
@@ -148,9 +156,9 @@ export default function Dashboard() {
                   }`} />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
-                      <p className="text-sm font-display font-medium text-foreground truncate uppercase">{alert.title}</p>
+                      <p className="text-sm font-display font-medium text-foreground truncate">{alert.title}</p>
                       <span className="text-[10px] font-mono text-muted-foreground whitespace-nowrap ml-2">
-                        {new Date(alert.detectedAt).toLocaleTimeString()}
+                        {new Date(alert.detectedAt).toLocaleTimeString('zh-CN')}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -160,7 +168,7 @@ export default function Dashboard() {
                         alert.severity === 'high' ? 'warning' :
                         alert.severity === 'medium' ? 'default' : 'secondary'
                       } className="text-[8px] px-1 py-0 h-4">
-                        {alert.severity}
+                        {severityLabel[alert.severity] || alert.severity}
                       </Badge>
                     </div>
                   </div>
@@ -168,7 +176,7 @@ export default function Dashboard() {
               ))}
               {(!alerts || alerts.length === 0) && (
                 <div className="text-center py-8 text-muted-foreground font-mono text-sm">
-                  No recent alerts detected.
+                  暂无最新告警。
                 </div>
               )}
             </div>

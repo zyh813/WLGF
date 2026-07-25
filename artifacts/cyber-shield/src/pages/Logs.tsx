@@ -5,8 +5,14 @@ import {
 } from "@workspace/api-client-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { ScrollText, Filter, Terminal } from "lucide-react";
+
+const levelLabel: Record<string, string> = {
+  info: "信息",
+  warning: "警告",
+  error: "错误",
+  critical: "严重",
+};
 
 export default function Logs() {
   const [levelFilter, setLevelFilter] = useState<SecurityLogLevel | 'all'>('all');
@@ -26,9 +32,9 @@ export default function Logs() {
         <div>
           <h1 className="text-3xl font-display font-bold uppercase tracking-widest text-primary drop-shadow-[0_0_10px_rgba(0,255,255,0.5)] flex items-center gap-3">
             <ScrollText className="w-8 h-8" />
-            Audit Logs
+            安全日志
           </h1>
-          <p className="text-muted-foreground font-mono text-sm mt-1">Raw security event stream and system traces</p>
+          <p className="text-muted-foreground font-mono text-sm mt-1">原始安全事件流与系统审计记录</p>
         </div>
         
         <div className="flex items-center gap-2 bg-card p-1 rounded-sm border border-border">
@@ -38,11 +44,11 @@ export default function Logs() {
             value={levelFilter}
             onChange={(e) => setLevelFilter(e.target.value as SecurityLogLevel | 'all')}
           >
-            <option value="all" className="bg-card">All Levels</option>
-            <option value="info" className="bg-card">Info</option>
-            <option value="warning" className="bg-card">Warning</option>
-            <option value="error" className="bg-card">Error</option>
-            <option value="critical" className="bg-card">Critical</option>
+            <option value="all" className="bg-card">全部级别</option>
+            <option value="info" className="bg-card">信息</option>
+            <option value="warning" className="bg-card">警告</option>
+            <option value="error" className="bg-card">错误</option>
+            <option value="critical" className="bg-card">严重</option>
           </select>
         </div>
       </div>
@@ -56,23 +62,23 @@ export default function Logs() {
           <Table>
             <TableHeader className="sticky top-0 bg-[#030712]/90 backdrop-blur-sm z-10 border-b border-primary/20">
               <TableRow className="border-0 hover:bg-transparent">
-                <TableHead className="w-[180px]">Timestamp</TableHead>
-                <TableHead className="w-[100px]">Level</TableHead>
-                <TableHead className="w-[150px]">Source</TableHead>
-                <TableHead>Event Message</TableHead>
+                <TableHead className="w-[180px]">时间戳</TableHead>
+                <TableHead className="w-[100px]">级别</TableHead>
+                <TableHead className="w-[150px]">来源</TableHead>
+                <TableHead>事件描述</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody className="font-mono text-xs">
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-12 text-primary animate-pulse border-0">
-                    Tailing log stream...
+                    正在读取日志流...
                   </TableCell>
                 </TableRow>
               ) : filteredLogs.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center py-12 text-muted-foreground border-0">
-                    No logs match criteria.
+                    当前筛选条件下无日志记录。
                   </TableCell>
                 </TableRow>
               ) : (
@@ -88,7 +94,7 @@ export default function Logs() {
                         log.level === 'warning' ? 'bg-warning/10 text-warning' :
                         'bg-primary/10 text-primary'
                       }`}>
-                        {log.level}
+                        {levelLabel[log.level] || log.level}
                       </span>
                     </TableCell>
                     <TableCell className="text-primary/70">{log.source}</TableCell>

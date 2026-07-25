@@ -23,11 +23,11 @@ export default function Connections() {
   const handleBlock = (id: number) => {
     blockConnection.mutate({ id }, {
       onSuccess: () => {
-        toast.success("Connection blocked and IP blacklisted");
+        toast.success("连接已封锁，IP已加入黑名单");
         queryClient.invalidateQueries({ queryKey: getGetConnectionsQueryKey() });
       },
       onError: () => {
-        toast.error("Failed to block connection");
+        toast.error("封锁连接失败");
       }
     });
   };
@@ -51,9 +51,9 @@ export default function Connections() {
         <div>
           <h1 className="text-3xl font-display font-bold uppercase tracking-widest text-primary drop-shadow-[0_0_10px_rgba(0,255,255,0.5)] flex items-center gap-3">
             <Activity className="w-8 h-8" />
-            Active Connections
+            网络连接
           </h1>
-          <p className="text-muted-foreground font-mono text-sm mt-1">Monitor real-time network sessions and traffic</p>
+          <p className="text-muted-foreground font-mono text-sm mt-1">实时监控网络会话与流量状态</p>
         </div>
         
         <div className="flex items-center gap-2 bg-card p-1 rounded-sm border border-border">
@@ -63,10 +63,10 @@ export default function Connections() {
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value as NetworkConnectionStatus | 'all')}
           >
-            <option value="all" className="bg-card">All Connections</option>
-            <option value="active" className="bg-card">Active</option>
-            <option value="suspicious" className="bg-card">Suspicious</option>
-            <option value="blocked" className="bg-card">Blocked</option>
+            <option value="all" className="bg-card">全部连接</option>
+            <option value="active" className="bg-card">正常</option>
+            <option value="suspicious" className="bg-card">可疑</option>
+            <option value="blocked" className="bg-card">已封锁</option>
           </select>
         </div>
       </div>
@@ -76,44 +76,44 @@ export default function Connections() {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Status</TableHead>
-                <TableHead>Source</TableHead>
-                <TableHead>Destination</TableHead>
-                <TableHead>Protocol</TableHead>
-                <TableHead>Traffic (In/Out)</TableHead>
-                <TableHead>Country</TableHead>
-                <TableHead>Uptime</TableHead>
-                <TableHead className="text-right">Action</TableHead>
+                <TableHead>状态</TableHead>
+                <TableHead>来源</TableHead>
+                <TableHead>目标</TableHead>
+                <TableHead>协议</TableHead>
+                <TableHead>流量（入/出）</TableHead>
+                <TableHead>归属地</TableHead>
+                <TableHead>建立时间</TableHead>
+                <TableHead className="text-right">操作</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-primary font-mono animate-pulse">
-                    Monitoring network streams...
+                    正在监控网络流量...
                   </TableCell>
                 </TableRow>
               ) : filteredConnections.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={8} className="text-center py-8 text-muted-foreground font-mono">
-                    No active connections found.
+                    当前筛选条件下无连接记录。
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredConnections.map((conn) => (
                   <TableRow key={conn.id} className={conn.status === 'suspicious' ? 'bg-warning/5' : conn.status === 'blocked' ? 'bg-destructive/5' : ''}>
                     <TableCell>
-                      {conn.status === 'active' && <Badge variant="success">ACTIVE</Badge>}
-                      {conn.status === 'suspicious' && <Badge variant="warning" className="animate-pulse">SUSPICIOUS</Badge>}
-                      {conn.status === 'blocked' && <Badge variant="destructive">BLOCKED</Badge>}
+                      {conn.status === 'active' && <Badge variant="success">正常</Badge>}
+                      {conn.status === 'suspicious' && <Badge variant="warning" className="animate-pulse">可疑</Badge>}
+                      {conn.status === 'blocked' && <Badge variant="destructive">已封锁</Badge>}
                     </TableCell>
                     <TableCell>
                       <div className="font-mono text-sm text-primary/90">{conn.sourceIp}</div>
-                      <div className="font-mono text-[10px] text-muted-foreground">Port {conn.sourcePort}</div>
+                      <div className="font-mono text-[10px] text-muted-foreground">端口 {conn.sourcePort}</div>
                     </TableCell>
                     <TableCell>
                       <div className="font-mono text-sm text-foreground">{conn.destinationIp}</div>
-                      <div className="font-mono text-[10px] text-muted-foreground">Port {conn.destinationPort}</div>
+                      <div className="font-mono text-[10px] text-muted-foreground">端口 {conn.destinationPort}</div>
                     </TableCell>
                     <TableCell>
                       <span className="font-mono text-xs px-2 py-1 bg-muted/50 rounded-sm uppercase border border-border/50 text-muted-foreground">
@@ -131,10 +131,10 @@ export default function Connections() {
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="font-display tracking-wider text-xs uppercase">{conn.country}</span>
+                      <span className="font-display tracking-wider text-xs">{conn.country}</span>
                     </TableCell>
                     <TableCell className="font-mono text-xs text-muted-foreground">
-                      {new Date(conn.connectedAt).toLocaleTimeString()}
+                      {new Date(conn.connectedAt).toLocaleTimeString('zh-CN')}
                     </TableCell>
                     <TableCell className="text-right">
                       {conn.status !== 'blocked' && (
@@ -146,7 +146,7 @@ export default function Connections() {
                           className="h-7 text-xs"
                         >
                           <ShieldBan className="w-3 h-3 mr-1" />
-                          Block
+                          封锁
                         </Button>
                       )}
                     </TableCell>
